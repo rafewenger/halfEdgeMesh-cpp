@@ -408,6 +408,13 @@ namespace HMESH {
     const VERTEX_TYPE * Vertex(const int iv) const
     { return(vertex_list[iv]); }
 
+    /// Return non-constant (NC) pointer to vertex with index iv.
+    /// - Could return NULL if no vertex associated with iv,
+    ///   e.g. vertex iv was deleted.
+    /// - Added: 11-16-2021 - RW
+    VERTEX_TYPE * VertexNC(const int iv)
+    { return(vertex_list[iv]); }
+
     /// Return length (.size()) of vertex_list.
     /// - Note vertex_list could contain some NULL elements.
     int VertexListLength() const
@@ -419,6 +426,13 @@ namespace HMESH {
     const HALF_EDGE_TYPE * HalfEdge(const int ihalf) const
     { return(half_edge_list[ihalf]); }
 
+    /// Return non-constant (NC) pointer to half edge with index ihalf.
+    /// - Could return NULL if no half edge associated with ihalf,
+    ///   e.g. half edge ihalf was deleted.
+    /// - Added: 11-16-2021 - RW
+    HALF_EDGE_TYPE * HalfEdgeNC(const int ihalf)
+    { return(half_edge_list[ihalf]); }
+
     /// Return length (.size()) of half_edge_list.
     /// - Note half_edge_list could contain some NULL elements.
     int HalfEdgeListLength() const
@@ -428,6 +442,13 @@ namespace HMESH {
     /// - Could return NULL if no cell associated with icell,
     ///   e.g. cell icell was deleted.
     const CELL_TYPE * Cell(const int icell) const
+    { return(cell_list[icell]); }
+
+    /// Return non-constant (NC) pointer to cell with index icell.
+    /// - Could return NULL if no cell associated with icell,
+    ///   e.g. cell icell was deleted.
+    /// - Added: 11-16-2021 - RW
+    CELL_TYPE * CellNC(const int icell)
     { return(cell_list[icell]); }
 
     /// Return length (.size()) of cell_list.
@@ -812,7 +833,9 @@ namespace HMESH {
   int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
   AddVertex()
   {
-    const int iv = vertex_list.size() + 1;
+    // CORRECTION: 11-16-2021 - RW
+    // INCORRECT: const int iv = vertex_list.size() + 1;
+    const int iv = vertex_list.size();
     AddVertex(iv);
     return(iv);
   }
