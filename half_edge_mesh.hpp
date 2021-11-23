@@ -477,6 +477,10 @@ namespace HMESH {
     /// Return true if icell is the index of some half edge.
     bool IsCellIndex(const int icell) const;
 
+    /// Count number of cells.
+    // - Added: 11-23-2021 - RW
+    int CountNumCells() const;
+
 
     // Set functions.
 
@@ -800,6 +804,53 @@ namespace HMESH {
     }
 
     return(vertex_list[iv]);
+  }
+
+
+  /// Return true if ihalf_edge is the index of some half edge.
+  // - Added: 11-23-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  bool HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  IsHalfEdgeIndex(const int ihalf_edge) const
+  {
+    if (ihalf_edge < 0) { return false; }
+    if (ihalf_edge >= HalfEdgeListLength()) { return false; }
+    if (HalfEdge(ihalf_edge) == NULL) { return false; }
+
+    return(true);
+  }
+
+
+  /// Return true if icell is the index of some cell.
+  // - Added: 11-23-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  bool HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  IsCellIndex(const int icell) const
+  {
+    if (icell < 0) { return false; }
+    if (icell >= CellListLength()) { return false; }
+    if (Cell(icell) == NULL) { return false; }
+
+    return(true);
+  }
+
+
+  /// Count number of cells.
+  // - Added: 11-23-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumCells() const
+  {
+    int num_cells = 0;
+    for (int i = 0; i < CellListLength(); i++) {
+      if (IsCellIndex(i))
+        { num_cells++; }
+    }
+
+    return num_cells;
   }
 
 

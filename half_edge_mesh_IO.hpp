@@ -206,8 +206,10 @@ namespace HMESH {
     out << "OFF\n";
 
     // Print number of vertices and polygons.
+    // CORRECTION: 11-21-2021 - RW
+    // INCORRECT: '<< mesh.CellListLength() << " "'
     out << mesh.VertexListLength() << " "
-       << mesh.CellListLength() << " "
+        << mesh.CountNumCells() << " "
         << 0 << "\n";
     out << "\n";
 
