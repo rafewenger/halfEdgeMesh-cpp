@@ -158,7 +158,7 @@ void print_time(const char * label, const double time)
 
 void usage_msg(std::ostream & out)
 {
-  out << "Usage: test_half_edge_mesh [-s] <input filename> [<output filename>]" 
+  out << "Usage: test_half_edge_mesh [-s] [-no_warn] [-time] [-h] <input filename> [<output filename>]" 
       << endl;
 }
 

@@ -309,7 +309,7 @@ void print_time(const char * label, const double time)
 
 void usage_msg(std::ostream & out)
 {
-  out << "Usage: test_half_edge_mesh [-s] <input filename> [<output filename>]" 
+  out << "Usage: test_half_edge_mesh [-s] [-no_warn] [-time] [-h] <input filename> [<output filename>]" 
       << endl;
 }
 
@@ -318,11 +318,15 @@ void help_msg()
 {
   usage_msg(cout);
   cout << endl;
-  cout << "test_half_edge_mesh - Test the HALF_EDGE_MESH and associated classes" << endl;
-  cout << "  and I/O routines by reading a .off file to the mesh," << endl;
-  cout << "  running check mesh, check manifold and check orientation routines" << endl;
-  cout << "  and then writing the mesh to a .off file." << endl;
-  cout << endl;
+  cout << "test_half_edge_meshB - Test derived vertex, half edge and cell classes in the half edge mesh data structure." << endl;
+  cout << "  Reads in a mesh." << endl;
+  cout << "  Stores \"new values\" in the new mesh vertices, half edges and cells." << endl;
+  cout << "  Creates a new mesh whose vertex and cell identifiers equal"
+       << endl;
+  cout << "    the new values stored in the old mesh." << endl;
+  cout << "  Writes the new mesh to a .off file." << endl;
+  cout << "  Note: The new .off file will have 5 vertices with coordintes (0, 0, 0)" << endl;
+  cout << "    since the new mesh has no vertices equal to 0, 1, 2, 3, or 4." << endl;
   cout << "Options:" << endl;
   cout << "-s:       Silent. Output only warnings and error messages." << endl;
   cout << "-no_warn: Do not output non-manifold or inconsistent orientation warnings." << endl;
