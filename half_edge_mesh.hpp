@@ -73,11 +73,13 @@ namespace HMESH {
     std::vector<HALF_EDGE_PTR> half_edge_from;
 
     /// Move boundary half edge to half_edge_from[0].
+    /// - If there are no boundary half edges in half_edge_from[],
+    ///   but half_edge_from[k]->PreviousHalfEdgeInCell() is a
+    ///   boundary half edge, move half_edge_from[k] to half_edge_from[0].
     /// - Does nothing if half_edge_from[0] is a boundary half edge
-    ///   or if there are no boundary half edges in vector
-    ///   half_edge_from[].
+    ///   or if vertex is not incident on any boundary half edges (from or to).
+    /// - Revised: 11-24-2021 - RW
     void _MoveBoundaryHalfEdgeToHalfEdgeFrom0();
-
 
   public:
     typedef CTYPE COORD_TYPE;
@@ -112,11 +114,25 @@ namespace HMESH {
     const HALF_EDGE_PTR KthHalfEdgeFrom(const int k) const
     { return(half_edge_from[k]); }
 
+    /// Return true if vertex is on the boundary or vertex is not
+    ///   incident on any cells.
+    bool IsBoundary() const
+    { 
+      if (NumHalfEdgesFrom() == 0) {
+        // Vertex is not incident on any cells.
+        return true;
+      }
+      // Vertex is on the boundary iff the half_edge_from[0].IsBoundary() and
+      //   or half_edge_from[0].PrevHalfEdgeInCell().IsBoundary().
+      return (KthHalfEdgeFrom(0)->IsBoundary() || 
+              KthHalfEdgeFrom(0)->PrevHalfEdgeInCell()->IsBoundary());
+    }
+
     /// Return incident half edge whose FromVertex() is current vertex
     ///   and whose ToVertexIndex() is iv.
     /// - Return NULL if no half edge found.
     const HALF_EDGE_PTR FindIncidentHalfEdge(const int iv) const;
-    
+
     /// Count number of half edges in incidence list 
     ///   whose from vertex is current verex and whose to vertex is iv.
     int CountNumIncidentHalfEdges(const int iv) const;
@@ -205,6 +221,10 @@ namespace HMESH {
     /// Return pointer to cell containing half edge.
     const CELL_PTR Cell() const { return(cell); }
 
+    /// Return index of cell.
+    /// - Added: 11-25-2021 - RW
+    const int CellIndex() const { return Cell()->Index(); }
+
     /// Return pointer to from vertex.
     const VERTEX_PTR FromVertex() const
     { return(from_vertex); }
@@ -228,10 +248,28 @@ namespace HMESH {
     /// Count number of half edges around edge.
     int CountNumHalfEdgesAroundEdge() const;
 
+    /// Return pointer to half edge with minimum index
+    ///   in cycle of half edges around edge.
+    /// - Useful in getting a single half edge representing an edge.
+    /// - Could return pointer to self.
+    /// - Added: 11-25-2021 - RW
+    const HALF_EDGE_PTR MinIndexHalfEdgeAroundEdge() const;
+
     /// Return true if half_edgeB has same endpoints as {this}.
     /// - half_edgeB could be oriented in same direction as {this}
     ///   or in opposite direction as {this}.
     bool SameEndpoints(const HALF_EDGE_PTR half_edgeB) const;
+
+    /// Return string of endpoints of half edge.
+    /// Separate coordinates with {separator}.
+    /// - Added: 11-25-2021 - RW
+    std::string EndpointsStr(const std::string & separator) const;
+
+    /// Return string of half edge index and endpoints.
+    /// Separate coordinates with {separator}.
+    /// - Added: 11-25-2021 - RW
+    std::string IndexAndEndpointsStr
+    (const std::string & separator) const;
 
     /// Print endpoints of half edge.
     template <typename OSTREAM_TYPE>
@@ -278,6 +316,11 @@ namespace HMESH {
     /// Return number of cell vertices.
     int NumVertices() const
     { return(num_vertices); }
+
+    /// Return true if cell has exactly 3 vertices.
+    /// - Added: 11-24-2021 - RW
+    bool IsTriangle() const
+    { return (NumVertices() == 3); }
 
     template <typename VTYPE, typename HTYPE, typename CELL_TYPE>
     friend class HALF_EDGE_MESH_BASE;
@@ -382,6 +425,14 @@ namespace HMESH {
     void _LinkHalfEdgesAroundEdge(HALF_EDGE_TYPE * half_edgeA,
                                   HALF_EDGE_TYPE * half_edgeB);
 
+    /// Move boundary half edge to half_edge_from[0] for each vertex
+    ///   in cell_vertex[].
+    /// @param cell_vertex[] List of cell vertex indices.
+    /// @pre Each vertex should already have been created.
+    /// - Added: 11-24-2021 - RW
+    void _MoveBoundaryHalfEdgeToHalfEdgeFrom0
+    (const std::vector<int> & cell_vertex);
+
     /// Add cell to cell_list[].
     /// - Returns pointer to new cell.
     CELL_TYPE * _AddCell();
@@ -477,9 +528,50 @@ namespace HMESH {
     /// Return true if icell is the index of some half edge.
     bool IsCellIndex(const int icell) const;
 
+    /// Count number of vertices.
+    /// - Added: 11-24-2021 - RW
+    int CountNumVertices() const;
+
+    /// Count number of isolated vertices.
+    /// - Isolated vertices are not in any mesh cell.
+    /// - Added: 11-24-2021 - RW
+    int CountNumIsolatedVertices() const;
+
+    /// Count number of edges.
+    /// - Added: 11-25-2021 - RW
+    int CountNumEdges() const;
+
+    /// Count number of boundary edges.
+    /// - Added: 11-25-2021 - RW
+    int CountNumBoundaryEdges() const;
+
     /// Count number of cells.
-    // - Added: 11-23-2021 - RW
+    /// - Added: 11-23-2021 - RW
     int CountNumCells() const;
+
+    /// Count number of cells with a given number of vertices.
+    /// - Added: 11-25-2021 - RW
+    int CountNumCellsOfSize(const int numv) const;
+
+    /// Count number of cells with number of vertices 
+    ///  greater than or equal to.
+    // - Added: 11-25-2021 - RW
+    int CountNumCellsOfSizeGE(const int numv) const;
+
+    /// Count number of triangles.
+    /// - Added: 11-25-2021 - RW
+    int CountNumTriangles() const
+    { return CountNumCellsOfSize(3); }
+
+    /// Count number of quadrilaterals.
+    /// - Added: 11-25-2021 - RW
+    int CountNumQuads() const
+    { return CountNumCellsOfSize(4); }
+
+    /// Count number of pentagons.
+    /// - Added: 11-25-2021 - RW
+    int CountNumPentagons() const
+    { return CountNumCellsOfSize(5); }
 
 
     // Set functions.
@@ -503,7 +595,7 @@ namespace HMESH {
     ///   number of vertices.
     /// - Cells must have at least 3 vertices.
     /// - Returns index of new cell.
-    int AddCell(const std::vector<int> & cell_vertices);
+    int AddCell(const std::vector<int> & cell_vertex);
 
     /// Set coordinate.
     /// - Adds vertices (iv-vertex_list.size()) 
@@ -551,7 +643,8 @@ namespace HMESH {
     bool CheckManifoldEdges(int & ihalf_edge) const;
 
     /// Check manifold vertex property.
-    /// - Return true if the cells on each vertex form a fan.
+    /// - Return true if the cells on each vertex form a fan and
+    ///   are consistently oriented around the vertex.
     /// - Returns index of non-manifold vertex.
     bool CheckManifoldVertices(int & iv) const;
 
@@ -565,6 +658,12 @@ namespace HMESH {
     (int & iv, int & ihalf_edge, 
      bool & flag_non_manifold_vertex,
      bool & flag_non_manifold_edge) const;
+
+    /// Check vertex index.
+    /// - Return true if iv is an index of some mesh vertex.
+    /// - Otherwise set error_msg and return false.
+    /// - Added: 11-25-2021 - RW
+    bool CheckVertexIndex(const int iv, std::string & error_msg) const;
 
   };
 
@@ -626,6 +725,10 @@ namespace HMESH {
 
 
   // Move boundary half edge to half_edge_from[0].
+  // - If there are no boundary half edges in half_edge_from[],
+  //   but half_edge_from[k]->PreviousHalfEdgeInCell() is a boundary half edge,
+  //   move half_edge_from[k] to half_edge_from[0].
+  // - Revised: 11-24-2021 - RW
   template <const int DIM, typename HALF_EDGE_PTR, typename CTYPE>
   void VERTEX_BASE<DIM,HALF_EDGE_PTR,CTYPE>::
   _MoveBoundaryHalfEdgeToHalfEdgeFrom0()
@@ -646,6 +749,29 @@ namespace HMESH {
     }
 
     // No boundary half edges found.
+
+    // Extra processing in case cells are inconsistently oriented.
+    // Check if half_edge_from[k]->PreviousHalfEdgeInCell()
+    //   is a boundary half edge for some k.
+
+    const HALF_EDGE_PTR prev_half_edge0 = 
+      half_edge_from[0]->PrevHalfEdgeInCell();
+
+    if (prev_half_edge0->IsBoundary()) { 
+      // prev_half_edge0 is already a boundary half edge.
+      // Do nothing.
+      return;
+    }
+
+    for (int k = 1; k < NumHalfEdgesFrom(); k++) {
+      const HALF_EDGE_PTR half_edge = KthHalfEdgeFrom(k);
+
+      if (half_edge->PrevHalfEdgeInCell()->IsBoundary()) {
+        std::swap(half_edge_from[0], half_edge_from[k]);
+        return;
+      }
+    }
+
     return;
   }
 
@@ -706,6 +832,42 @@ namespace HMESH {
   }
 
 
+  // Return pointer to half edge with minimum index
+  //   in cycle of half edges around edge.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_PTR, typename HALF_EDGE_PTR, typename CELL_PTR>
+  const HALF_EDGE_PTR 
+  HALF_EDGE_BASE<VERTEX_PTR,HALF_EDGE_PTR,CELL_PTR>::
+  MinIndexHalfEdgeAroundEdge() const
+  {
+    // Cannot have more than max_num half edges around an edge.
+    const int max_num = 
+      FromVertex()->NumHalfEdgesFrom() +
+      ToVertex()->NumHalfEdgesFrom();
+
+    HALF_EDGE_PTR half_edge = this->NextHalfEdgeAroundEdge();
+
+    // Initialize.
+    HALF_EDGE_PTR min_index_half_edge = half_edge;
+    int min_index = half_edge->Index();
+
+    // Check that num <= max_num to avoid infinite loop in case
+    //   data structures is corrupted.
+    int k = 0;
+    half_edge = half_edge->NextHalfEdgeAroundEdge();
+    do {
+      if (half_edge->Index() < min_index) {
+        min_index_half_edge = half_edge;
+        min_index = half_edge->Index();
+      }
+      half_edge = half_edge->NextHalfEdgeAroundEdge();
+      k++;
+    } while (half_edge != this && k <= max_num);
+
+    return min_index_half_edge;
+  }
+
+
   // Return true if half_edgeB has same endpoints as this.
   template <typename VERTEX_PTR, typename HALF_EDGE_PTR, typename CELL_PTR>
   bool HALF_EDGE_BASE<VERTEX_PTR,HALF_EDGE_PTR,CELL_PTR>::
@@ -736,6 +898,46 @@ namespace HMESH {
       //   move in a consistent direction around vertex iv.
       return(NextHalfEdgeInCell()->NextHalfEdgeAroundEdge());
     }
+  }
+
+
+  // Return string of endpoints of half edge.
+  // Separate coordinates with {separator}.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_PTR, typename HALF_EDGE_PTR, typename CELL_PTR>
+  std::string HALF_EDGE_BASE<VERTEX_PTR,HALF_EDGE_PTR,CELL_PTR>::
+  EndpointsStr(const std::string & separator) const
+  {
+    std::stringstream ss;
+
+    if (FromVertex() == NULL) 
+      { ss << "NULL" << separator; }
+    else
+      { ss << FromVertexIndex() << separator; }
+
+    if (NextHalfEdgeInCell() == NULL)
+      { ss << "NULL"; }
+    else if (ToVertex() == NULL)
+      { ss << "NULL"; }
+    else
+      { ss << ToVertexIndex(); }
+
+    return ss.str();
+  }
+
+
+  // Return string of half edge index and endpoints.
+  // Separate coordinates with {separator}.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_PTR, typename HALF_EDGE_PTR, typename CELL_PTR>
+  std::string HALF_EDGE_BASE<VERTEX_PTR,HALF_EDGE_PTR,CELL_PTR>::
+  IndexAndEndpointsStr(const std::string & separator) const
+  {
+    std::stringstream ss;
+
+    ss << Index() << " (" << EndpointsStr(separator) << ")";
+
+    return ss.str();
   }
 
 
@@ -807,7 +1009,22 @@ namespace HMESH {
   }
 
 
-  /// Return true if ihalf_edge is the index of some half edge.
+  // Return true if iv is the index of some vertex.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  bool HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  IsVertexIndex(const int iv) const
+  {
+    if (iv < 0) { return false; }
+    if (iv >= VertexListLength()) { return false; }
+    if (Vertex(iv) == NULL) { return false; }
+
+    return(true);
+  }
+
+
+  // Return true if ihalf_edge is the index of some half edge.
   // - Added: 11-23-2021 - RW
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
@@ -822,7 +1039,7 @@ namespace HMESH {
   }
 
 
-  /// Return true if icell is the index of some cell.
+  // Return true if icell is the index of some cell.
   // - Added: 11-23-2021 - RW
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
@@ -837,7 +1054,88 @@ namespace HMESH {
   }
 
 
-  /// Count number of cells.
+  // Count number of vertices.
+  // - Added: 11-24-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumVertices() const
+  {
+    int num_vertices = 0;
+    for (int iv = 0; iv < VertexListLength(); iv++) {
+      const VERTEX_TYPE * v = Vertex(iv);
+      if (v != NULL)
+        { num_vertices++; }
+    }
+
+    return num_vertices;
+  }
+
+
+  // Count number of isolated vertices.
+  // - Added: 11-24-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumIsolatedVertices() const
+  {
+    int num_isolated_vertices = 0;
+    for (int iv = 0; iv < VertexListLength(); iv++) {
+      const VERTEX_TYPE * v = Vertex(iv);
+      if (v != NULL) {
+        if (v->NumHalfEdgesFrom() == 0) 
+          { num_isolated_vertices++; }
+      }
+    }
+
+    return num_isolated_vertices;
+  }
+
+
+  // Count number of edges.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumEdges() const
+  {
+    int num_edges = 0;
+    for (int ihalf_edge = 0; ihalf_edge < HalfEdgeListLength(); 
+         ihalf_edge++) {
+      const HALF_EDGE_TYPE * half_edge = HalfEdge(ihalf_edge);
+      if (half_edge != NULL) {
+        const HALF_EDGE_TYPE * min_index_half_edge =
+          half_edge->MinIndexHalfEdgeAroundEdge();
+        if (half_edge == min_index_half_edge) 
+          { num_edges++; }
+      }
+    }
+
+    return num_edges;
+  }
+
+  // Count number of boundary edges
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumBoundaryEdges() const
+  {
+    int num_boundary_edges = 0;
+    for (int ihalf_edge = 0; ihalf_edge < HalfEdgeListLength(); 
+         ihalf_edge++) {
+      const HALF_EDGE_TYPE * half_edge = HalfEdge(ihalf_edge);
+      if (half_edge != NULL) {
+        if (half_edge->IsBoundary())
+          { num_boundary_edges++; }
+      }
+    }
+
+    return num_boundary_edges;
+  }
+
+
+  // Count number of cells.
   // - Added: 11-23-2021 - RW
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
@@ -845,9 +1143,51 @@ namespace HMESH {
   CountNumCells() const
   {
     int num_cells = 0;
-    for (int i = 0; i < CellListLength(); i++) {
-      if (IsCellIndex(i))
+    for (int icell = 0; icell < CellListLength(); icell++) {
+      const CELL_TYPE * cell = Cell(icell);
+      if (cell != NULL)
         { num_cells++; }
+    }
+
+    return num_cells;
+  }
+
+
+  // Count number of cells with a given number of vertices.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumCellsOfSize(const int numv) const
+  {
+    int num_cells = 0;
+    for (int icell = 0; icell < CellListLength(); icell++) {
+      const CELL_TYPE * cell = Cell(icell);
+      if (cell != NULL) {
+        if (cell->NumVertices() == numv)
+          { num_cells++; }
+      }
+    }
+
+    return num_cells;
+  }
+
+
+  // Count number of cells with number of vertices 
+  //  greater than or equal to.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  int HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CountNumCellsOfSizeGE(const int numv) const
+  {
+    int num_cells = 0;
+    for (int icell = 0; icell < CellListLength(); icell++) {
+      const CELL_TYPE * cell = Cell(icell);
+      if (cell != NULL) {
+        if (cell->NumVertices() >= numv)
+          { num_cells++; }
+      }
     }
 
     return num_cells;
@@ -990,14 +1330,19 @@ namespace HMESH {
 
     vfrom->half_edge_from.push_back(half_edge);
 
-    vfrom->_MoveBoundaryHalfEdgeToHalfEdgeFrom0();
-    vto->_MoveBoundaryHalfEdgeToHalfEdgeFrom0();
+    // Deleted: 11-24-2021 - RW
+    // Revised version of _MoveBoundaryHalfEdgeToHalfEdgFrom(),
+    //   requires prev_half_edge_in_cell to be set before call.
+    // Calls have been moved to _AddCell().
+    // Making these calls here will cause a segmentation fault.
+    // vfrom->_MoveBoundaryHalfEdgeToHalfEdgeFrom0();
+    // vto->_MoveBoundaryHalfEdgeToHalfEdgeFrom0();
 
     return(half_edge);
   }
 
 
-  /// Link half edge hprev to half edge hnext.
+  // Link half edge hprev to half edge hnext.
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
   void HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
@@ -1043,6 +1388,29 @@ namespace HMESH {
     std::swap(half_edgeA->next_half_edge_around_edge,
               half_edgeB->next_half_edge_around_edge);
   }
+
+  // Move boundary half edge to half_edge_from[0] for each vertex
+  //   in cell_vertex[].
+  // - Added: 11-24-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  void HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  _MoveBoundaryHalfEdgeToHalfEdgeFrom0
+  (const std::vector<int> & cell_vertex)
+  {
+    for (int i = 0; i < cell_vertex.size(); i++) {
+      const int iv = cell_vertex[i];
+      VERTEX_TYPE * v = vertex_list[iv];
+      if (v == NULL) {
+        throw SIMPLE_EXCEPTION
+          ("Programming error. Attempt to access non-existant vertex in _MoveBoundaryHalfEdgeToHalfEdgeFrom0().");
+      }
+
+      v->_MoveBoundaryHalfEdgeToHalfEdgeFrom0();
+    }
+  }
+
+
 
 
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
@@ -1107,6 +1475,10 @@ namespace HMESH {
     // Link last half edge (hprev) and first half edge (half_edge0)
     _LinkHalfEdgesInCell(hprev, half_edge0);
 
+    // - Added: 11-24-2021 - RW
+    // - This call must be AFTER _LinkHalfEdgesInCell(hprev, half_edge0).
+    _MoveBoundaryHalfEdgeToHalfEdgeFrom0(cell_vertex);
+
     if (cell_vertex.size() != cell->NumVertices()) {
       throw SIMPLE_EXCEPTION
         ("Error in HALF_EDGE_MESH_BASE::AddCell(). Incorrect number of vertices in cell.");
@@ -1117,7 +1489,7 @@ namespace HMESH {
   }
 
 
-  /// Set coordinate.
+  // Set coordinate.
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
   template <typename CTYPE>
@@ -1135,7 +1507,7 @@ namespace HMESH {
   }
 
 
-  /// Set coordinate.
+  // Set coordinate.
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
   template <typename CTYPE>
@@ -1149,7 +1521,7 @@ namespace HMESH {
   }
 
 
-  /// Free list.
+  // Free list.
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
   template <typename ELEMENT_TYPE>
@@ -1313,17 +1685,28 @@ namespace HMESH {
 
       if (next_half_edge == NULL) { return(false); }
       if (prev_half_edge == NULL) { return(false); }
-      if (next_half_edge->Cell() != cell)
+
+      if (next_half_edge->PrevHalfEdgeInCell() != half_edge) {
+        ss << "Error. half_edge->NextHalfEdgeInCell()->PrevHalfEdgeInCell() is not half_edge.\n";
+        ss << "  Half edge: " << half_edge->Index()
+           << "  Next half edge: " << next_half_edge->Index()
+           << "\n";
+        error_msg = ss.str();
+        return(false); 
+      }
+
+      if (prev_half_edge->NextHalfEdgeInCell() != half_edge) 
         { return(false); }
-      if (prev_half_edge->Cell() != cell)
-        { return(false); }
+
+      if (next_half_edge->Cell() != cell) {
+        // next_half_edge should be in same cell as half_edge.
+        ss << "Error.  Consecutive half edges, "
+           << half_edge->Index() << " and "
+           << next_half_edge->Index() << ", are in different cells.";
+        error_msg = ss.str();
+        return(false); 
+      }
           
-      if (next_half_edge->PrevHalfEdgeInCell() != half_edge)
-        { return(false); }
-
-      if (prev_half_edge->NextHalfEdgeInCell() != half_edge)
-        { return(false); }
-
       // Check half edges around edge.
       HALF_EDGE_TYPE * half_edgeX = 
         half_edge->next_half_edge_around_edge;
@@ -1554,7 +1937,8 @@ namespace HMESH {
 
 
   // Check manifold vertex property.
-  // - Return true if the cells on each vertex form a fan.
+  // - Return true if the cells on each vertex form a fan and
+  //   are consistently oriented around the vertex.
   // - Returns index of non-manifold vertex.
   template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
             typename CELL_TYPE>
@@ -1603,6 +1987,47 @@ namespace HMESH {
     flag_non_manifold_edge = !CheckManifoldEdges(ihalf_edge);
 
     return(!(flag_non_manifold_vertex || flag_non_manifold_edge));
+  }
+
+
+  // Check vertex index.
+  // - Return true if iv is an index of some mesh vertex.
+  // - Added: 11-25-2021 - RW
+  template <typename VERTEX_TYPE, typename HALF_EDGE_TYPE,
+            typename CELL_TYPE>
+  bool HALF_EDGE_MESH_BASE<VERTEX_TYPE, HALF_EDGE_TYPE, CELL_TYPE>::
+  CheckVertexIndex(const int iv, std::string & error_msg) const
+  {
+    std::stringstream ss;
+
+    if (this->VertexListLength() <= 0) {
+      ss << "Mesh has no vertices.\n";
+      error_msg = ss.str();
+      return false;
+    }
+
+    if (iv < 0) {
+      ss << "Illegal negative vertex index: " << iv << "\n";
+      ss << "  Vertex indices cannot be negative.\n";
+      error_msg = ss.str();
+      return false;
+    }
+
+    if (iv >= this->VertexListLength()) {
+      ss << "Illegal vertex index: " << iv << "\n";
+      ss << "  Maximum vertex index: " 
+         << this->VertexListLength()-1 << "\n";
+      error_msg = ss.str();
+      return false;
+    }
+
+    if (Vertex(iv) == NULL) {
+      ss << "No vertex has index: " << iv << "\n";
+      error_msg = ss.str();
+      return false;
+    }
+
+    return true;
   }
 
 }
