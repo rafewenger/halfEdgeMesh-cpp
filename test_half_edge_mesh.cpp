@@ -117,34 +117,43 @@ void parse_command_line(int argc, char ** argv)
 /// - Returns true if mesh is not a manifold or not oriented
 bool warn_non_manifold_or_not_oriented(const HALF_EDGE_MESH_A & mesh)
 {
-    int iv, ihalf_edge;
-    bool flag_non_manifold_vertex, flag_non_manifold_edge;
+  int iv, ihalf_edgeA, ihalf_edgeB;
+  bool flag_non_manifold_vertex, flag_non_manifold_edge;
+
+    const bool flag_manifold =
+      mesh.CheckManifold
+      (iv, ihalf_edgeA, flag_non_manifold_vertex, 
+       flag_non_manifold_edge);
     
-    if (!mesh.CheckManifold
-        (iv, ihalf_edge, flag_non_manifold_vertex, 
-         flag_non_manifold_edge)) {
+    if (flag_non_manifold_edge) {
+      cerr << "Warning: Non-manifold edge (";
+      mesh.HalfEdge(ihalf_edgeA)->PrintEndpoints(cerr, ",");
+      cerr << ")." << endl;
 
-      if (flag_non_manifold_vertex) {
-        cerr << "Warning: Non-manifold vertex " << iv << "." << endl;
-      }
-
-      if (flag_non_manifold_edge) {
-        cerr << "Warning: Non-manifold edge (";
-        mesh.HalfEdge(ihalf_edge)->PrintEndpoints(cerr, ",");
-        cerr << ")." << endl;
-      }
-
+      // Non-manifold edge automatically implies inconsistent orientations.
       return true;
     }
 
-    if (!flag_non_manifold_edge) {
-      if (!mesh.CheckOrientation(ihalf_edge)) {
-        cerr << "Warning: Inconsistent orientation of cells incident on edge (";
-        mesh.HalfEdge(ihalf_edge)->PrintEndpoints(cerr, ",");
-        cerr << ")." << endl;
+    const bool is_oriented =
+      mesh.CheckOrientation(ihalf_edgeB);
+
+    if (is_oriented) {
+      if (flag_non_manifold_vertex) {
+        cerr << "Warning: Non-manifold vertex " << iv << "." << endl;
 
         return true;
       }
+    }
+    else {
+      cerr << "Warning: Inconsistent orientation of cells incident on edge (";
+      mesh.HalfEdge(ihalf_edgeB)->PrintEndpoints(cerr, ",");
+      cerr << ")." << endl;
+
+      if (flag_non_manifold_vertex) {
+        cerr << "Warning: Non-manifold vertex or inconsistent orientations in cells incident on vertex " << iv << "." << endl;
+      }
+
+      return true;
     }
 
     return false;
