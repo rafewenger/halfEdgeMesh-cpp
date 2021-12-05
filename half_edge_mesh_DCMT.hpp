@@ -726,7 +726,7 @@ namespace HMESH {
 
     if (half_edgeA == NULL) {
       throw SIMPLE_EXCEPTION
-        ("Programming error. Argument to HALF_EDGE_MESH_DCMT_BASE::SplitCell is not a half edge index.");
+        ("Programming error. Argument to HALF_EDGE_MESH_DCMT_BASE::JoinTwoCells is not a half edge index.");
     }
 
     if (IsIllegalJoinCells(half_edgeA)) 
@@ -736,7 +736,7 @@ namespace HMESH {
 
     if (half_edgeB->NextHalfEdgeAroundEdge() != half_edgeA) {
       throw SIMPLE_EXCEPTION
-        ("Programming error. Half edge passed to HALF_EDGE_MESH_DCMT_BASE::SplitCell is in an edge shared by three or more cells.");
+        ("Programming error. Half edge passed to HALF_EDGE_MESH_DCMT_BASE::JoinTwoCells is in an edge shared by three or more cells.");
     }
 
     VERTEX_TYPE * vA = half_edgeA->FromVertex();
