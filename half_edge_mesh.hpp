@@ -854,13 +854,12 @@ namespace HMESH {
     // Check that num <= max_num to avoid infinite loop in case
     //   data structures is corrupted.
     int k = 0;
-    half_edge = half_edge->NextHalfEdgeAroundEdge();
     do {
+      half_edge = half_edge->NextHalfEdgeAroundEdge();
       if (half_edge->Index() < min_index) {
         min_index_half_edge = half_edge;
         min_index = half_edge->Index();
       }
-      half_edge = half_edge->NextHalfEdgeAroundEdge();
       k++;
     } while (half_edge != this && k <= max_num);
 
