@@ -232,7 +232,8 @@ void prompt_and_collapse_edges
   }
 }
 
-// Split largest cell edge.
+
+// Collapse shortest cell edge.
 void collapse_shortest_cell_edge
 (HALF_EDGE_MESH_DCMT_A & mesh, const int icell,
  const bool flag_terse, const bool flag_no_warn, 
@@ -500,9 +501,9 @@ void prompt_and_split_cells
     cin >> icell;
 
     if (icell < 0) { return; }
-    if (icell >= mesh.VertexListLength()) {
+    if (icell >= mesh.CellListLength()) {
       cout << "No cell has index " << icell << "." << endl;
-      cout << "Maximum cell index: " << mesh.VertexListLength()-1 << endl;
+      cout << "Maximum cell index: " << mesh.CellListLength()-1 << endl;
       continue;
     }
 
