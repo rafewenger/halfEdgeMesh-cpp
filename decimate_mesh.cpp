@@ -1331,15 +1331,15 @@ void usage_msg(std::ostream & out)
 {
   out << "Usage: decimate_mesh [OPTIONS] <input filename> [<output filename>]" 
       << endl;
-  cout << "OPTIONS: " << endl;
-  cout << "  [-list_no_collapse] [-collapse_edges] [-collapse_short_edges]" 
+  out << "OPTIONS: " << endl;
+  out << "  [-list_no_collapse] [-collapse_edges] [-collapse_short_edges]" 
        << endl;
-  cout << "  [-split_edges] [-split_long_edges]" << endl;
-  cout << "  [-split_cells] [-split_all_cells] [-split_all_edges_cells]" 
+  out << "  [-split_edges] [-split_long_edges]" << endl;
+  out << "  [-split_cells] [-split_all_cells] [-split_all_edges_cells]" 
        << endl;
-  cout << "  [-join_cells] [-join_each_cell]" << endl;
-  cout << "  [-allow_non_manifold] [-fail_on_non_manifold]" << endl;
-  cout << "  [-s | -terse] [-no_warn] [-time] [-h]" << endl;
+  out << "  [-join_cells] [-join_each_cell]" << endl;
+  out << "  [-allow_non_manifold] [-fail_on_non_manifold]" << endl;
+  out << "  [-s | -terse] [-no_warn] [-time] [-h]" << endl;
 }
 
 
