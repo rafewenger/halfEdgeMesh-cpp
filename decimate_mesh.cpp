@@ -711,7 +711,7 @@ void join_two_cells(HALF_EDGE_MESH_DCMT_A & mesh,
 // Prompt and join cells.
 void prompt_and_join_cells
 (HALF_EDGE_MESH_DCMT_A & mesh, 
- const bool flag_tersee, const bool flag_no_warn)
+ const bool flag_terse, const bool flag_no_warn)
 {
   while (true) {
     const HALF_EDGE_DCMT_A * half_edge0 =
@@ -1199,6 +1199,7 @@ prompt_for_mesh_edge(const HALF_EDGE_MESH_DCMT_A & mesh,
         cout << "No internal half edges from " << iv0 << "." << endl;
         cout << "Start again." << endl;
         cout << endl;
+        continue;
       }
     }
     else {
