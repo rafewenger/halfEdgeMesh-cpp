@@ -753,9 +753,12 @@ void join_each_cell
     int ihalf_edge_min, ihalf_edge_max;
     cell->ComputeMinMaxEdgeLengthSquared
       (Lmin, Lmax, ihalf_edge_min, ihalf_edge_max);
-    const HALF_EDGE_DCMT_A * half_edge = 
-      mesh.HalfEdge(ihalf_edge_min);
 
+    // CORRECTED: 12-07-2021 - RW
+    //const HALF_EDGE_DCMT_A * half_edge = mesh.HalfEdge(ihalf_edge_min);
+ 
+    const HALF_EDGE_DCMT_A * half_edge = mesh.HalfEdge(ihalf_edge_max);
+    
     const HALF_EDGE_DCMT_A * half_edgeX = 
       half_edge->NextHalfEdgeAroundEdge();
 
